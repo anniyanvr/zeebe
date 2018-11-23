@@ -33,6 +33,7 @@ import io.zeebe.broker.workflow.model.transformation.ModelElementTransformer;
 import io.zeebe.broker.workflow.model.transformation.TransformContext;
 import io.zeebe.model.bpmn.instance.Activity;
 import io.zeebe.model.bpmn.instance.BoundaryEvent;
+import io.zeebe.model.bpmn.instance.CatchEvent;
 import io.zeebe.model.bpmn.instance.EndEvent;
 import io.zeebe.model.bpmn.instance.EventBasedGateway;
 import io.zeebe.model.bpmn.instance.ExclusiveGateway;
@@ -57,6 +58,7 @@ public class FlowElementInstantiationTransformer implements ModelElementTransfor
 
     ELEMENT_FACTORIES.put(Activity.class, ExecutableActivity::new);
     ELEMENT_FACTORIES.put(BoundaryEvent.class, ExecutableBoundaryEvent::new);
+    ELEMENT_FACTORIES.put(CatchEvent.class, ExecutableCatchEventElement::new);
     ELEMENT_FACTORIES.put(EndEvent.class, ExecutableFlowNode::new);
     ELEMENT_FACTORIES.put(EventBasedGateway.class, ExecutableEventBasedGateway::new);
     ELEMENT_FACTORIES.put(ExclusiveGateway.class, ExecutableExclusiveGateway::new);
