@@ -102,7 +102,7 @@ public final class CorrelateWorkflowInstanceSubscription
     final WorkflowInstanceSubscription subscription =
         subscriptionState.getSubscription(elementInstanceKey, subscriptionRecord.getMessageName());
 
-    if (subscription == null) {
+    if (subscription == null || subscription.isClosing()) {
       streamWriter.appendRejection(
           record, RejectionType.NOT_APPLICABLE, "subscription is already correlated");
 
@@ -190,7 +190,6 @@ public final class CorrelateWorkflowInstanceSubscription
     // side effect queue; the order is important since we want to publish that the message was
     // correlated before closing the subscription.
     if (closeSubscription) {
-      subscriptionState.remove(subscription);
       boundaryEventActivator
           .getCatchEventOutput()
           .unsubscribeFromMessageEvent(sideEffectQueue, subscription);
