@@ -284,10 +284,10 @@ public class EventbasedGatewayTest {
     assertThat(
             RecordingExporter.workflowInstanceSubscriptionRecords(
                     WorkflowInstanceSubscriptionIntent.CLOSED)
-                .limit(1))
+                .limit(2))
         .extracting(r -> r.getValue().getMessageName())
-        .hasSize(1)
-        .contains("msg-2");
+        .hasSize(2)
+        .contains("msg-1", "msg-2");
   }
 
   @Test
