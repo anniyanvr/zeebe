@@ -84,6 +84,16 @@ public class MessageSubscriptionState implements StateLifecycleListener {
         stateController.getColumnFamilyHandle(NAME_AND_CORRELATION_KEY_COLUMN_FAMILY_NAME);
   }
 
+  public MessageSubscription get(long elementInstanceKey, DirectBuffer messageName) {
+    final boolean found = readSubscription(elementInstanceKey, messageName, subscription);
+
+    if (found) {
+      return subscription;
+    } else {
+      return null;
+    }
+  }
+
   public void put(final MessageSubscription subscription) {
     try (final WriteOptions options = new WriteOptions();
         final ZbWriteBatch batch = new ZbWriteBatch()) {

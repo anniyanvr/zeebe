@@ -478,7 +478,7 @@ public class WorkflowInstanceStreamProcessorTest {
     assertThat(rejection.getMetadata().getIntent())
         .isEqualTo(WorkflowInstanceSubscriptionIntent.CORRELATE);
     assertThat(BufferUtil.bufferAsString(rejection.getMetadata().getRejectionReason()))
-        .isEqualTo("activity is not active anymore");
+        .isEqualTo("subscription was already correlated or closed");
   }
 
   @Test

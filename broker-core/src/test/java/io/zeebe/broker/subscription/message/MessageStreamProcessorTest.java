@@ -198,7 +198,7 @@ public class MessageStreamProcessorTest {
 
     assertThat(rejection.getMetadata().getIntent()).isEqualTo(MessageSubscriptionIntent.CORRELATE);
     assertThat(BufferUtil.bufferAsString(rejection.getMetadata().getRejectionReason()))
-        .isEqualTo("subscription is already correlated");
+        .isEqualTo("subscription does not exist or is in pending correlation state");
   }
 
   @Test
