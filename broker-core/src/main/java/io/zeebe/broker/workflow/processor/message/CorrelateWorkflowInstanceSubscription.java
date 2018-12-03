@@ -27,6 +27,8 @@ import io.zeebe.broker.logstreams.processor.TypedStreamWriter;
 import io.zeebe.broker.subscription.command.SubscriptionCommandSender;
 import io.zeebe.broker.subscription.message.data.WorkflowInstanceSubscriptionRecord;
 import io.zeebe.broker.subscription.message.state.WorkflowInstanceSubscriptionState;
+import io.zeebe.broker.workflow.model.element.ExecutableBoundaryEvent;
+import io.zeebe.broker.workflow.processor.SideEffectQueue;
 import io.zeebe.broker.workflow.processor.boundary.BoundaryEventActivator;
 import io.zeebe.broker.workflow.state.ElementInstance;
 import io.zeebe.broker.workflow.state.StoredRecord;
@@ -48,6 +50,7 @@ public final class CorrelateWorkflowInstanceSubscription
   public static final Duration SUBSCRIPTION_TIMEOUT = Duration.ofSeconds(10);
   public static final Duration SUBSCRIPTION_CHECK_INTERVAL = Duration.ofSeconds(30);
 
+  private final SideEffectQueue sideEffectQueue = new SideEffectQueue();
   private final BoundaryEventActivator boundaryEventActivator;
   private final TopologyManager topologyManager;
   private final WorkflowState workflowState;
@@ -92,7 +95,8 @@ public final class CorrelateWorkflowInstanceSubscription
       final TypedStreamWriter streamWriter,
       final Consumer<SideEffectProducer> sideEffect) {
 
-    this.subscriptionRecord = record.getValue();
+    sideEffectQueue.clear();
+    subscriptionRecord = record.getValue();
     final long elementInstanceKey = subscriptionRecord.getElementInstanceKey();
 
     final WorkflowInstanceSubscription subscription =
@@ -106,10 +110,8 @@ public final class CorrelateWorkflowInstanceSubscription
       return;
     }
 
-    subscriptionState.remove(subscription);
-
-    sideEffect.accept(this::sendAcknowledgeCommand);
-
+    sideEffectQueue.add(this::sendAcknowledgeCommand);
+    sideEffect.accept(sideEffectQueue);
     correlateMessageToWorkflowInstance(record, streamWriter, elementInstanceKey, subscription);
   }
 
@@ -121,6 +123,7 @@ public final class CorrelateWorkflowInstanceSubscription
 
     // TODO handler trigger events in a uniform way - #1699
 
+    boolean closeSubscription = true;
     final ElementInstance elementInstance =
         workflowState.getElementInstanceState().getInstance(elementInstanceKey);
 
@@ -135,12 +138,21 @@ public final class CorrelateWorkflowInstanceSubscription
 
       if (boundaryEventActivator.shouldActivateBoundaryEvent(
           elementInstance, subscription.getHandlerNodeId())) {
+        final ExecutableBoundaryEvent event =
+            boundaryEventActivator.getBoundaryEventById(
+                workflowState,
+                elementInstance.getValue().getWorkflowKey(),
+                subscription.getHandlerNodeId());
+
         boundaryEventActivator.activateBoundaryEvent(
             workflowState,
             elementInstance,
             subscription.getHandlerNodeId(),
             subscriptionRecord.getPayload(),
-            streamWriter);
+            streamWriter,
+            event);
+
+        closeSubscription = event.cancelActivity();
       } else {
         streamWriter.appendFollowUpEvent(
             elementInstanceKey, WorkflowInstanceIntent.ELEMENT_COMPLETING, value);
@@ -172,6 +184,16 @@ public final class CorrelateWorkflowInstanceSubscription
         streamWriter.appendRejection(
             record, RejectionType.NOT_APPLICABLE, "activity is not active anymore");
       }
+    }
+
+    // the command to close the message subscriptions is added after sendAcknowledgeCommand in the
+    // side effect queue; the order is important since we want to publish that the message was
+    // correlated before closing the subscription.
+    if (closeSubscription) {
+      subscriptionState.remove(subscription);
+      boundaryEventActivator
+          .getCatchEventOutput()
+          .unsubscribeFromMessageEvent(sideEffectQueue, subscription);
     }
   }
 

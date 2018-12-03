@@ -172,11 +172,11 @@ public class CatchEventOutput {
     state
         .getWorkflowInstanceSubscriptionState()
         .visitElementSubscriptions(
-            elementInstanceKey, sub -> unsubscribeFromMessageEvent(context, sub));
+            elementInstanceKey, sub -> unsubscribeFromMessageEvent(context.getSideEffect(), sub));
   }
 
-  private boolean unsubscribeFromMessageEvent(
-      BpmnStepContext<?> context, WorkflowInstanceSubscription subscription) {
+  public boolean unsubscribeFromMessageEvent(
+      SideEffectQueue sideEffectQueue, WorkflowInstanceSubscription subscription) {
     final DirectBuffer messageName = cloneBuffer(subscription.getMessageName());
     final int subscriptionPartitionId = subscription.getSubscriptionPartitionId();
     final long workflowInstanceKey = subscription.getWorkflowInstanceKey();
@@ -187,12 +187,10 @@ public class CatchEventOutput {
         .getWorkflowInstanceSubscriptionState()
         .updateToClosingState(subscription, ActorClock.currentTimeMillis());
 
-    context
-        .getSideEffect()
-        .add(
-            () ->
-                sendCloseMessageSubscriptionCommand(
-                    subscriptionPartitionId, workflowInstanceKey, elementInstanceKey, messageName));
+    sideEffectQueue.add(
+        () ->
+            sendCloseMessageSubscriptionCommand(
+                subscriptionPartitionId, workflowInstanceKey, elementInstanceKey, messageName));
 
     return true;
   }

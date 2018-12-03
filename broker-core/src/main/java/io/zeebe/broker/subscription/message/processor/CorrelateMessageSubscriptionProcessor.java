@@ -46,16 +46,13 @@ public class CorrelateMessageSubscriptionProcessor
 
     final MessageSubscriptionRecord subscriptionRecord = record.getValue();
 
-    final boolean removed =
-        subscriptionState.remove(
-            subscriptionRecord.getElementInstanceKey(), subscriptionRecord.getMessageName());
-
-    if (removed) {
+    if (subscriptionState.existSubscriptionForElementInstance(
+        subscriptionRecord.getElementInstanceKey(), subscriptionRecord.getMessageName())) {
       streamWriter.appendFollowUpEvent(
           record.getKey(), MessageSubscriptionIntent.CORRELATED, subscriptionRecord);
     } else {
       streamWriter.appendRejection(
-          record, RejectionType.NOT_APPLICABLE, "subscription is already correlated");
+          record, RejectionType.NOT_APPLICABLE, "subscription does not exist");
     }
   }
 }
