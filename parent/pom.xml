@@ -664,8 +664,10 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
-              <forkCount>0.5C</forkCount>
+              <forkCount>${env.LIMITS_CPU}</forkCount>
               <reuseForks>true</reuseForks>
+              <!-- Bug SUREFIRE-1588 -->
+              <useSystemClassLoader>false</useSystemClassLoader>
               <systemPropertyVariables>
                 <!-- use two dollar signs to prevent maven properties resolution, surefire will resolve
                 the property later. If only ${surefire.forkNumber} is used maven will fail to resolve it

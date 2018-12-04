@@ -26,6 +26,7 @@ import io.zeebe.broker.exporter.util.TestJarExporter;
 import io.zeebe.util.FileUtil;
 import java.io.File;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -49,6 +50,7 @@ public class ExporterJarRepositoryTest {
         .isInstanceOf(ExporterJarLoadException.class);
   }
 
+  @Ignore
   @Test
   public void shouldThrowExceptionOnLoadIfNotReadable() throws Exception {
     // given
