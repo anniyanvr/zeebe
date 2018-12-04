@@ -50,7 +50,7 @@ public class CorrelateMessageSubscriptionProcessor
         subscriptionState.get(
             subscriptionRecord.getElementInstanceKey(), subscriptionRecord.getMessageName());
 
-    if (subscription != null && !subscription.isCorrelating()) {
+    if (subscription != null) {
       streamWriter.appendFollowUpEvent(
           record.getKey(), MessageSubscriptionIntent.CORRELATED, subscriptionRecord);
     } else {
