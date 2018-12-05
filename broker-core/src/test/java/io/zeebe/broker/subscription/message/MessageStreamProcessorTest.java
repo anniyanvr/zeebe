@@ -172,7 +172,7 @@ public class MessageStreamProcessorTest {
   }
 
   @Test
-  public void shouldRejectDuplicatedCorrelateMessageSubscription() {
+  public void shouldRejectCorrelateIfMessageSubscriptionClosed() {
     // given
     final MessageSubscriptionRecord subscription = messageSubscription();
     final MessageRecord message = message();
@@ -187,7 +187,7 @@ public class MessageStreamProcessorTest {
     waitUntil(() -> streamProcessor.isBlocked());
 
     // when
-    rule.writeCommand(MessageSubscriptionIntent.CORRELATE, subscription);
+    rule.writeCommand(MessageSubscriptionIntent.CLOSE, subscription);
     rule.writeCommand(MessageSubscriptionIntent.CORRELATE, subscription);
 
     streamProcessor.unblock();
@@ -198,7 +198,7 @@ public class MessageStreamProcessorTest {
 
     assertThat(rejection.getMetadata().getIntent()).isEqualTo(MessageSubscriptionIntent.CORRELATE);
     assertThat(BufferUtil.bufferAsString(rejection.getMetadata().getRejectionReason()))
-        .isEqualTo("subscription does not exist or is in pending correlation state");
+        .isEqualTo("subscription does not exist");
   }
 
   @Test

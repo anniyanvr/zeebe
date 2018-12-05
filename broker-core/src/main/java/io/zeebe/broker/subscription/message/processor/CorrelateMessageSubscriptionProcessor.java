@@ -56,9 +56,7 @@ public class CorrelateMessageSubscriptionProcessor
       subscription.setCommandSentTime(0);
     } else {
       streamWriter.appendRejection(
-          record,
-          RejectionType.NOT_APPLICABLE,
-          "subscription does not exist or is in pending correlation state");
+          record, RejectionType.NOT_APPLICABLE, "subscription does not exist");
     }
   }
 }
