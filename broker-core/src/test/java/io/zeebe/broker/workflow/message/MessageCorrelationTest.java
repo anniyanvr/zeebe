@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 
 import io.zeebe.broker.test.EmbeddedBrokerRule;
+import io.zeebe.broker.workflow.processor.message.CorrelateWorkflowInstanceSubscription;
 import io.zeebe.exporter.record.Record;
 import io.zeebe.exporter.record.RecordMetadata;
 import io.zeebe.exporter.record.value.WorkflowInstanceRecordValue;
@@ -153,6 +154,9 @@ public class MessageCorrelationTest {
 
     // when
     testClient.createWorkflowInstance(PROCESS_ID, asMsgPack("key", "order-123"));
+    brokerRule
+        .getClock()
+        .addTime(CorrelateWorkflowInstanceSubscription.SUBSCRIPTION_CHECK_INTERVAL);
 
     // then
     final Record<WorkflowInstanceRecordValue> event =

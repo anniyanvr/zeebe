@@ -131,10 +131,6 @@ public class WorkflowInstanceSubscription implements BufferReader, BufferWriter 
     return state == STATE_CLOSING;
   }
 
-  public boolean isOpened() {
-    return state == STATE_OPENED;
-  }
-
   public void setOpened() {
     state = STATE_OPENED;
   }

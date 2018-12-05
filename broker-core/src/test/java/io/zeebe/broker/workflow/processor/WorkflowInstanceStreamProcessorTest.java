@@ -430,7 +430,7 @@ public class WorkflowInstanceStreamProcessorTest {
     assertThat(rejection.getMetadata().getIntent())
         .isEqualTo(WorkflowInstanceSubscriptionIntent.CORRELATE);
     assertThat(BufferUtil.bufferAsString(rejection.getMetadata().getRejectionReason()))
-        .isEqualTo("subscription was already correlated or is not opened");
+        .isEqualTo("subscription was already correlated or is closing");
 
     verify(streamProcessorRule.getMockSubscriptionCommandSender(), timeout(5_000).times(2))
         .correlateMessageSubscription(
@@ -478,7 +478,7 @@ public class WorkflowInstanceStreamProcessorTest {
     assertThat(rejection.getMetadata().getIntent())
         .isEqualTo(WorkflowInstanceSubscriptionIntent.CORRELATE);
     assertThat(BufferUtil.bufferAsString(rejection.getMetadata().getRejectionReason()))
-        .isEqualTo("subscription was already correlated or is not opened");
+        .isEqualTo("subscription was already correlated or is closing");
   }
 
   @Test

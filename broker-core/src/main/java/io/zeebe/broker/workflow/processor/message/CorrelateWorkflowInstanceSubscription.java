@@ -102,11 +102,11 @@ public final class CorrelateWorkflowInstanceSubscription
     final WorkflowInstanceSubscription subscription =
         subscriptionState.getSubscription(elementInstanceKey, subscriptionRecord.getMessageName());
 
-    if (subscription == null || !subscription.isOpened()) {
+    if (subscription == null || subscription.isClosing()) {
       streamWriter.appendRejection(
           record,
           RejectionType.NOT_APPLICABLE,
-          "subscription was already correlated or is not opened");
+          "subscription was already correlated or is closing");
 
       sideEffect.accept(this::sendAcknowledgeCommand);
       return;
