@@ -31,6 +31,7 @@ import io.zeebe.logstreams.log.LoggedEvent;
 import io.zeebe.logstreams.processor.EventProcessor;
 import io.zeebe.logstreams.processor.StreamProcessor;
 import io.zeebe.logstreams.processor.StreamProcessorContext;
+import io.zeebe.logstreams.state.StateController;
 import io.zeebe.logstreams.state.StateSnapshotController;
 import io.zeebe.logstreams.state.StateStorage;
 import io.zeebe.protocol.clientapi.RecordType;
@@ -39,6 +40,7 @@ import io.zeebe.protocol.impl.record.RecordMetadata;
 import io.zeebe.protocol.intent.ExporterIntent;
 import io.zeebe.util.buffer.BufferUtil;
 import io.zeebe.util.sched.ActorControl;
+import io.zeebe.util.sched.ActorThread;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,6 +72,11 @@ public class ExporterStreamProcessor implements StreamProcessor {
 
   public StateSnapshotController createSnapshotController(final StateStorage storage) {
     return new StateSnapshotController(state, storage);
+  }
+
+  @Override
+  public StateController getStateController() {
+    return state;
   }
 
   @Override
@@ -131,8 +138,6 @@ public class ExporterStreamProcessor implements StreamProcessor {
         container.context.getLogger().error("Error on close", e);
       }
     }
-
-    state.close();
   }
 
   private boolean shouldCommitPositions() {
@@ -156,13 +161,21 @@ public class ExporterStreamProcessor implements StreamProcessor {
 
     @Override
     public void updateLastExportedRecordPosition(final long position) {
-      actorControl.run(
-          () -> {
-            if (state.isOpened()) {
-              state.setPosition(getId(), position);
-            }
-            this.position = position;
-          });
+      final ActorThread currentThread = ActorThread.current();
+
+      if (currentThread != null
+          && actorControl.isCalledFromWithinActor(currentThread.getCurrentJob())) {
+        setLastExporterRecordPosition(position);
+      } else {
+        actorControl.run(() -> setLastExporterRecordPosition(position));
+      }
+    }
+
+    private void setLastExporterRecordPosition(long position) {
+      if (state.isOpened()) {
+        state.setPosition(getId(), position);
+      }
+      this.position = position;
     }
 
     @Override
@@ -257,9 +270,5 @@ public class ExporterStreamProcessor implements StreamProcessor {
 
       return 0;
     }
-  }
-
-  public ExporterStreamProcessorState getState() {
-    return state;
   }
 }

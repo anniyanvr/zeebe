@@ -270,6 +270,11 @@ public class StateController implements AutoCloseable {
 
     try (Options options = createOptions()) {
       RocksDB.destroyDB(dbDirectory.toString(), options);
+
+      // on Windows, destroyDB does not remove the directory but simply clears the contents
+      if (dbDirectory.exists()) {
+        dbDirectory.delete();
+      }
     }
   }
 
