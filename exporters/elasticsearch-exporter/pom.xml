@@ -92,6 +92,11 @@
         <artifactId>elasticsearch-maven-plugin</artifactId>
         <configuration>
           <version>${version.elasticsearch}</version>
+          <instanceSettings>
+            <properties>
+              <es.insecure.allow.root>true</es.insecure.allow.root>
+            </properties>
+          </instanceSettings>
         </configuration>
       </plugin>
     </plugins>
