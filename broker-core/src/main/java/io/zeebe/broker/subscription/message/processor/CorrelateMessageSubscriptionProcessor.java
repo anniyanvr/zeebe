@@ -53,6 +53,7 @@ public class CorrelateMessageSubscriptionProcessor
     if (subscription != null) {
       streamWriter.appendFollowUpEvent(
           record.getKey(), MessageSubscriptionIntent.CORRELATED, subscriptionRecord);
+      subscription.setCommandSentTime(0);
     } else {
       streamWriter.appendRejection(
           record,
